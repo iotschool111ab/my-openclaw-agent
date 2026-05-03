@@ -1,7 +1,8 @@
 import time
 
 _sessions = {}
-IMAGE_TTL = 1800  # 圖片保留 30 分鐘
+IMAGE_TTL = 1800   # 圖片保留 30 分鐘
+LOCATION_TTL = 3600  # 位置保留 1 小時
 HISTORY_MAX = 10
 
 
@@ -11,6 +12,7 @@ def get_session(user_id: str) -> dict:
             "last_image_bytes": None,
             "last_image_time": 0,
             "last_intent": None,
+            "last_location": None,
             "history": [],
         }
     return _sessions[user_id]
@@ -53,3 +55,16 @@ def add_history(user_id: str, role: str, content: str):
 
 def get_history(user_id: str) -> list:
     return get_session(user_id).get("history", [])
+
+
+def set_location(user_id: str, lat: float, lng: float, address: str = ""):
+    get_session(user_id)["last_location"] = {
+        "lat": lat, "lng": lng, "address": address, "time": time.time()
+    }
+
+
+def get_location(user_id: str) -> dict | None:
+    loc = get_session(user_id).get("last_location")
+    if loc and time.time() - loc["time"] < LOCATION_TTL:
+        return loc
+    return None

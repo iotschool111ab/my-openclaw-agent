@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>取得目前位置</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 36px 28px;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .icon { font-size: 56px; margin-bottom: 16px; }
+    h2 { font-size: 20px; color: #1a1a2e; margin-bottom: 8px; }
+    p  { font-size: 14px; color: #666; margin-bottom: 28px; line-height: 1.6; }
+    button {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      background: #06C755;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    button:active { opacity: .8; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    #status {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #555;
+      min-height: 20px;
+    }
+    .error { color: #e53e3e; }
+    .success { color: #06C755; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">📍</div>
+  <h2>取得目前位置</h2>
+  <p>點擊下方按鈕，授權取得您的 GPS 位置<br>並自動帶入路線規劃的出發地</p>
+  <button id="btn" onclick="getLocation()">取得我的位置</button>
+  <div id="status"></div>
+</div>
+
+<script>
+  const LIFF_ID = "{{ liff_location_id }}";
+
+  liff.init({ liffId: LIFF_ID }).catch(err => {
+    setStatus('LIFF 初始化失敗：' + err.message, true);
+  });
+
+  function setStatus(msg, isError = false) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = isError ? 'error' : '';
+  }
+
+  async function getLocation() {
+    const btn = document.getElementById('btn');
+    btn.disabled = true;
+    setStatus('定位中，請稍候...');
+
+    if (!navigator.geolocation) {
+      setStatus('此裝置不支援 GPS 定位', true);
+      btn.disabled = false;
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        setStatus(`取得位置成功（精度 ±${Math.round(accuracy)}m），傳送中...`);
+
+        try {
+          await liff.sendMessages([{
+            type: 'location',
+            title: '我的目前位置',
+            address: `緯度 ${latitude.toFixed(5)}，經度 ${longitude.toFixed(5)}`,
+            latitude: latitude,
+            longitude: longitude
+          }]);
+          setStatus('✅ 位置已傳送！視窗即將關閉...');
+          document.getElementById('status').className = 'success';
+          setTimeout(() => liff.closeWindow(), 1500);
+        } catch (e) {
+          setStatus('傳送失敗：' + e.message, true);
+          btn.disabled = false;
+        }
+      },
+      (err) => {
+        const msgs = {
+          1: '請允許位置存取權限後再試',
+          2: '無法取得位置，請確認 GPS 已開啟',
+          3: '定位逾時，請再試一次'
+        };
+        setStatus(msgs[err.code] || err.message, true);
+        btn.disabled = false;
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  }
+</script>
+</body>
+</html>

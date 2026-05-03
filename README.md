@@ -15,11 +15,14 @@
 | 💆 醫美分析 | 傳圖 + 「皮膚」/「醫美」 | 皮膚狀況評估、保養建議 |
 | 🏔️ 景點辨識 | 傳圖 + 「景點」/「這是哪」 | 景點名稱、旅遊建議 |
 | 🗺️ 路線規劃 | 「從 A 到 B 的路線」 | 生成開車/大眾運輸/步行 Google Maps 連結 |
+| 📍 GPS 路線 | LIFF 取得位置 → 「帶我去 XX」 | 以目前 GPS 座標為出發地規劃路線 |
+| 🔍 條碼掃描 | 說「掃描條碼」→ 開啟 LIFF 掃描器 | EAN/UPC/QR 條碼，查食品成分與營養 |
 | 👨‍🍳 食譜生成 | 「OO 的食譜」/「怎麼做 OO」 | 含食材份量、步驟、技巧 |
-| 🔍 即時搜尋 | 含「今天」/「天氣」/「新聞」 | 透過 Tavily 搜尋後回答 |
+| 🔎 即時搜尋 | 含「今天」/「天氣」/「新聞」 | 透過 Tavily 搜尋後回答 |
 | 💬 一般對話 | 任意文字 | 帶入對話歷史的 AI 回覆 |
+| 📋 功能選單 | 說「功能」/「選單」 | 顯示所有功能與 LIFF 連結 |
 
-> 傳圖後可繼續追問，Bot 會記住 30 分鐘內的最後一張圖片。
+> 傳圖後可繼續追問，Bot 會記住 30 分鐘內的最後一張圖片。GPS 位置記憶 1 小時。
 
 ---
 
@@ -31,17 +34,22 @@ my-openclaw-agent/
 │   └── devcontainer.json       # GitHub Codespaces 容器設定
 ├── handlers/
 │   ├── image_handler.py        # 圖片分析分派（含圖片暫存追問）
-│   ├── maps_handler.py         # Google Maps 路線連結生成
-│   └── recipe_handler.py       # 食譜生成
+│   ├── maps_handler.py         # Google Maps 路線（文字 + GPS 座標）
+│   ├── recipe_handler.py       # 食譜生成
+│   └── barcode_handler.py      # 條碼查詢 + 健康評估
 ├── prompts/
 │   └── image_prompts.py        # 6 種圖片場景的 system prompt
 ├── services/
 │   ├── llm_service.py          # Groq Chat API（含 OpenClaw Gateway fallback）
 │   ├── vision_service.py       # Groq Vision API（含 OpenClaw Gateway fallback）
-│   └── search_service.py       # Tavily 即時搜尋
-├── main_lifestyle.py           # Flask 主程式（LINE Webhook 入口）
-├── intent_router.py            # 意圖辨識（文字 & 圖片場景分類）
-├── session_store.py            # 用戶狀態記憶（圖片暫存、對話歷史）
+│   ├── search_service.py       # Tavily 即時搜尋
+│   └── barcode_service.py      # Open Food Facts 條碼查詢
+├── templates/
+│   ├── liff_location.html      # LIFF GPS 定位頁面
+│   └── liff_barcode.html       # LIFF 條碼掃描頁面（html5-qrcode）
+├── main_lifestyle.py           # Flask 主程式（LINE Webhook + LIFF 路由）
+├── intent_router.py            # 意圖辨識（含掃描訊息、選單偵測）
+├── session_store.py            # 用戶狀態記憶（圖片、位置、對話歷史）
 ├── requirements.txt
 ├── .gitignore
 ├── run_codespace.sh            # GitHub Codespaces 啟動腳本
@@ -82,6 +90,8 @@ OPENCLAW_GATEWAY_URL=你的_gateway_url     # 選用，Groq 失敗時的備用�
 | GROQ_API_KEY | [Groq Console](https://console.groq.com/keys) | ✅ |
 | TAVILY_API_KEY | [Tavily](https://tavily.com/) | 選用 |
 | OPENCLAW_GATEWAY_URL | 自架 OpenAI 相容 Gateway | 選用 |
+| LIFF_LOCATION_ID | LIFF GPS 定位頁面的 LIFF ID | 選用 |
+| LIFF_BARCODE_ID | LIFF 條碼掃描頁面的 LIFF ID | 選用 |
 
 ### 2. 安裝依賴
 
