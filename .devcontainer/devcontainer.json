@@ -1,0 +1,31 @@
+{
+  "name": "LINE Bot AI Assistant",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": {
+      "label": "LINE Bot Webhook",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    }
+  },
+
+  "postCreateCommand": "pip install -r requirements.txt && echo '✅ 依賴安裝完成'",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylint"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "PORT": "5000"
+  }
+}
