@@ -43,12 +43,30 @@ def handle_route(text: str) -> str:
     if result is None:
         return (
             "無法判斷出發地或目的地，請說得更清楚一點。\n"
-            "例如：「幫我規劃從台北車站到故宮的路線」"
+            "例如：「幫我規劃從台北車站到故宮的路線」\n\n"
+            "或點選下方按鈕取得您的 GPS 位置作為出發地 👇"
         )
 
     origin, destination = result
-    urls = _build_urls(origin, destination)
+    return _format_route(origin, destination)
 
+
+def handle_route_from_coords(lat: float, lng: float, destination: str) -> str:
+    """以 GPS 座標為出發地規劃路線。"""
+    origin_coord = f"{lat},{lng}"
+    origin_label = "您的目前位置"
+    urls = _build_urls(origin_coord, destination)
+
+    return (
+        f"路線規劃：{origin_label} → {destination}\n\n"
+        f"🚗 開車\n{urls['driving']}\n\n"
+        f"🚇 大眾運輸\n{urls['transit']}\n\n"
+        f"🚶 步行\n{urls['walking']}"
+    )
+
+
+def _format_route(origin: str, destination: str) -> str:
+    urls = _build_urls(origin, destination)
     return (
         f"路線規劃：{origin} → {destination}\n\n"
         f"🚗 開車\n{urls['driving']}\n\n"
