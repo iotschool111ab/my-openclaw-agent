@@ -28,13 +28,15 @@ def _parse_locations(text: str) -> tuple[str, str] | None:
 
 
 def _build_urls(origin: str, destination: str) -> dict[str, str]:
-    o = urllib.parse.quote(origin)
-    d = urllib.parse.quote(destination)
-    base = f"https://www.google.com/maps/dir/{o}/{d}"
+    # 使用 Google Maps 官方 ?api=1 查詢參數格式
+    # 中文地名直接放入 URL，不做 percent-encoding，LINE 顯示更友善
+    base = "https://www.google.com/maps/dir/?api=1"
+    o = urllib.parse.quote(origin, safe="")
+    d = urllib.parse.quote(destination, safe="")
     return {
-        "driving": f"{base}/@/@?travelmode=driving",
-        "transit": f"{base}/@/@?travelmode=transit",
-        "walking": f"{base}/@/@?travelmode=walking",
+        "driving": f"{base}&origin={o}&destination={d}&travelmode=driving",
+        "transit": f"{base}&origin={o}&destination={d}&travelmode=transit",
+        "walking": f"{base}&origin={o}&destination={d}&travelmode=walking",
     }
 
 
