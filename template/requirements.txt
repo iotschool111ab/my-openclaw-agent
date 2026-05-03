@@ -1,0 +1,32 @@
+# Web Framework
+flask==3.0.0
+werkzeug==3.0.0
+
+# HTTP Requests
+requests==2.31.0
+urllib3==2.0.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Platform SDKs
+line-bot-sdk==3.5.0
+python-telegram-bot==20.0
+discord.py==2.3.0
+slack-bolt==1.18.0
+
+# Data Validation
+pydantic==2.0.0
+
+# Logging
+python-logging-loki==0.3.2
+
+# Testing
+pytest==7.4.0
+
+# Code Quality
+black==23.9.0
+flake8==6.0.0
+
+# Production Server
+gunicorn==21.2.0
