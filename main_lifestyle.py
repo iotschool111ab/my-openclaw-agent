@@ -85,17 +85,22 @@ def handle_text(event):
         line_bot_api.push_message(user_id, TextSendMessage(text=response))
         return
 
-    # 2. 圖片追問（用戶上一則有傳圖）
-    followup = handle_followup(user_id, text)
-    if followup is not None:
-        _reply(event, followup)
-        session_store.add_history(user_id, "user", text)
-        session_store.add_history(user_id, "assistant", followup)
-        return
-
-    # 3. 意圖分類
+    # 2. 意圖分類（必須在圖片追問檢查之前，避免路線/食譜等明確意圖被誤當圖片追問）
     intent = classify_text(text)
     history = session_store.get_history(user_id)
+
+    # 3. 圖片追問：只有「一般對話」意圖才允許使用暫存圖片
+    #    路線、食譜、搜尋等明確意圖一律走各自的 handler，並清除圖片 session
+    if intent == "chat":
+        followup = handle_followup(user_id, text)
+        if followup is not None:
+            _reply(event, followup)
+            session_store.add_history(user_id, "user", text)
+            session_store.add_history(user_id, "assistant", followup)
+            return
+    else:
+        # 非 chat 意圖代表用戶已切換話題，清除暫存圖片避免後續混淆
+        session_store.clear_image(user_id)
 
     if intent == "menu":
         response = _build_menu()
